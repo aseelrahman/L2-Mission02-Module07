@@ -1,10 +1,18 @@
+import "dotenv/config";
 import express, {
   type Application,
   type Request,
   type Response,
 } from "express";
+import { Pool } from "pg";
+
 const app: Application = express();
 const port = 5005;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL_POOLED,
+});
+
+console.log(pool);
 
 app.use(express.json());
 app.use(express.text());
@@ -21,7 +29,14 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.post("/", async (req: Request, res: Response) => {
-  console.log(req.body);
+  //   console.log(req.body);
+  const { name, age, password } = req.body;
+  //   console.log(password);
+  res.status(200).json({
+    success: true,
+    message: "This is a test api.",
+    data: { name, age },
+  });
 });
 
 app.listen(port, () => {
