@@ -61,10 +61,56 @@ app.post("/api/v1/users", async (req: Request, res: Response) => {
         `,
       [name, email, password, age],
     );
-    console.log(result);
+    // console.log(result);
     res.status(201).json({
       success: true,
       message: "User Created",
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error?.message,
+      data: error,
+    });
+  }
+});
+
+app.get("/api/v1/users", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`
+        SELECT * FROM users
+      `);
+
+    // console.log(result);
+    res.status(200).json({
+      success: true,
+      message: "Users retrieved successfully!",
+      data: result.rows,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error?.message,
+      data: error,
+    });
+  }
+});
+
+app.get("/api/v1/users/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT * FROM users WHERE id = $1
+      `,
+      [id],
+    );
+    // console.log(result);
+    res.status(200).json({
+      success: true,
+      message: "User found!",
       data: result.rows[0],
     });
   } catch (error: any) {
