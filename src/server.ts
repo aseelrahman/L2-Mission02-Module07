@@ -4,7 +4,7 @@ import express, {
   type Request,
   type Response,
 } from "express";
-import { Pool } from "pg";
+import { Pool, Result } from "pg";
 
 const app: Application = express();
 const port = 5005;
@@ -17,10 +17,10 @@ const pool = new Pool({
 const initDB = async () => {
   try {
     await pool.query(`
-            CREATE TABLE users(
+            CREATE TABLE IF NOT EXISTS users(
             id SERIAL PRIMARY KEY,
             name VARCHAR(255),
-            email VARCHAR(255) NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
             password VARCHAR(255) NOT NULL,
             age INT,
             is_Active BOOLEAN DEFAULT true,
@@ -50,15 +50,30 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-app.post("/", async (req: Request, res: Response) => {
-  //   console.log(req.body);
-  const { name, age, password } = req.body;
-  //   console.log(password);
-  res.status(200).json({
-    success: true,
-    message: "This is a test api.",
-    data: { name, age },
-  });
+app.post("/api/v1/users", async (req: Request, res: Response) => {
+  try {
+    //   console.log(req.body);
+    const { name, email, age, password } = req.body;
+    //   console.log(password);
+    const result = await pool.query(
+      `
+        INSERT INTO users(name,email,password,age) VALUES($1,$2,$3,$4) RETURNING *
+        `,
+      [name, email, password, age],
+    );
+    console.log(result);
+    res.status(201).json({
+      success: true,
+      message: "User Created",
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error?.message,
+      data: error,
+    });
+  }
 });
 
 app.listen(port, () => {
